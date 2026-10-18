@@ -13,6 +13,7 @@
 #include "../include/vehicle_node.h"
 #include "../include/transmission_node.h"
 #include "../include/throttle_nodes.h"
+#include "../include/compressor_node.h"
 
 es_script::LanguageRules::LanguageRules() {
     /* void */
@@ -74,6 +75,8 @@ void es_script::LanguageRules::registerBuiltinNodeTypes() {
         "__engine_sim__transmission_channel", &es_script::ObjectChannel::TransmissionChannel);
     registerBuiltinType<piranha::ChannelNode>(
         "__engine_sim__throttle_channel", &es_script::ObjectChannel::ThrottleChannel);
+    registerBuiltinType<piranha::ChannelNode>(
+        "__engine_sim__compressor_channel", &es_script::ObjectChannel::CompressorChannel);
 
     // Literals
     registerBuiltinType<piranha::DefaultLiteralFloatNode>(
@@ -147,6 +150,7 @@ void es_script::LanguageRules::registerBuiltinNodeTypes() {
     registerBuiltinType<SetVehicleNode>("__engine_sim__set_vehicle");
     registerBuiltinType<SetTransmissionNode>("__engine_sim__set_transmission");
     registerBuiltinType<AddGearNode>("__engine_sim__add_gear");
+    registerBuiltinType<AddCompressorNode>("__engine_sim__add_compressor");
 
     // Objects
     registerBuiltinType<EngineNode>("__engine_sim__engine");
@@ -170,6 +174,8 @@ void es_script::LanguageRules::registerBuiltinNodeTypes() {
     registerBuiltinType<TransmissionNode>("__engine_sim__transmission");
     registerBuiltinType<DirectThrottleLinkageNode>("__engine_sim__direct_throttle_linkage");
     registerBuiltinType<GovernorNode>("__engine_sim__governor");
+    registerBuiltinType<SuperchargerNode>("__engine_sim__supercharger");
+    registerBuiltinType<TurbochargerNode>("__engine_sim__turbocharger");
 
     // String operations
     registerBuiltinType<piranha::OperationNodeSpecialized<

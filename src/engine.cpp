@@ -19,12 +19,14 @@ Engine::Engine() {
     m_connectingRods = nullptr;
     m_exhaustSystems = nullptr;
     m_intakes = nullptr;
+    m_compressors = nullptr;
     m_combustionChambers = nullptr;
 
     m_crankshaftCount = 0;
     m_cylinderBankCount = 0;
     m_cylinderCount = 0;
     m_intakeCount = 0;
+    m_compressorCount = 0;
     m_exhaustSystemCount = 0;
     m_starterSpeed = 0;
     m_starterTorque = 0;
@@ -50,6 +52,7 @@ Engine::~Engine() {
     assert(m_heads == nullptr);
     assert(m_exhaustSystems == nullptr);
     assert(m_intakes == nullptr);
+    assert(m_compressors == nullptr);
     assert(m_combustionChambers == nullptr);
 }
 
@@ -59,6 +62,7 @@ void Engine::initialize(const Parameters &params) {
     m_cylinderBankCount = params.cylinderBanks;
     m_exhaustSystemCount = params.exhaustSystemCount;
     m_intakeCount = params.intakeCount;
+    m_compressorCount = params.compressorCount;
     m_starterTorque = params.starterTorque;
     m_starterSpeed = params.starterSpeed;
     m_dynoMinSpeed = params.dynoMinSpeed;
@@ -79,6 +83,7 @@ void Engine::initialize(const Parameters &params) {
     m_connectingRods = new ConnectingRod[m_cylinderCount];
     m_exhaustSystems = new ExhaustSystem[m_exhaustSystemCount];
     m_intakes = new Intake[m_intakeCount];
+    m_compressors = new Compressor[m_compressorCount];
     m_combustionChambers = new CombustionChamber[m_cylinderCount];
 
     for (int i = 0; i < m_exhaustSystemCount; ++i) {
@@ -91,6 +96,10 @@ void Engine::initialize(const Parameters &params) {
 }
 
 void Engine::destroy() {
+    for (int i = 0; i < m_compressorCount; ++i) {
+        m_compressors[i].destroy();
+    }
+
     for (int i = 0; i < m_crankshaftCount; ++i) {
         m_crankshafts[i].destroy();
     }
@@ -119,6 +128,7 @@ void Engine::destroy() {
     if (m_connectingRods != nullptr) delete[] m_connectingRods;
     if (m_exhaustSystems != nullptr) delete[] m_exhaustSystems;
     if (m_intakes != nullptr) delete[] m_intakes;
+    if (m_compressors != nullptr) delete[] m_compressors;
     if (m_combustionChambers != nullptr) delete[] m_combustionChambers;
 
     m_crankshafts = nullptr;
@@ -128,6 +138,7 @@ void Engine::destroy() {
     m_heads = nullptr;
     m_exhaustSystems = nullptr;
     m_intakes = nullptr;
+    m_compressors = nullptr;
     m_combustionChambers = nullptr;
     m_throttle = nullptr;
 }

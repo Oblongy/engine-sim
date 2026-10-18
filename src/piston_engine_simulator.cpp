@@ -18,6 +18,7 @@ PistonEngineSimulator::PistonEngineSimulator() {
     m_cylinderWallConstraints = nullptr;
     m_linkConstraints = nullptr;
     m_crankshaftFrictionConstraints = nullptr;
+    m_compressorLoads = nullptr;
     m_crankshaftLinks = nullptr;
 
     m_exhaustFlowStagingBuffer = nullptr;
@@ -31,6 +32,7 @@ PistonEngineSimulator::~PistonEngineSimulator() {
     assert(m_cylinderWallConstraints == nullptr);
     assert(m_linkConstraints == nullptr);
     assert(m_crankshaftFrictionConstraints == nullptr);
+    assert(m_compressorLoads == nullptr);
     assert(m_exhaustFlowStagingBuffer == nullptr);
     assert(m_delayFilters == nullptr);
     assert(m_antialiasingFilters == nullptr);
@@ -181,6 +183,17 @@ void PistonEngineSimulator::loadSimulation(Engine *engine, Vehicle *vehicle, Tra
     m_starterMotor.m_rotationSpeed = -m_engine->getStarterSpeed();
     m_system->addConstraint(&m_starterMotor);
 
+    const int compressorCount = m_engine->getCompressorCount();
+    if (compressorCount > 0) {
+        m_compressorLoads = new atg_scs::RotationFrictionConstraint[compressorCount];
+        for (int i = 0; i < compressorCount; ++i) {
+            m_compressorLoads[i].setBody(&m_engine->getOutputCrankshaft()->m_body);
+            m_compressorLoads[i].m_minTorque = 0.0;
+            m_compressorLoads[i].m_maxTorque = 0.0;
+            m_system->addConstraint(&m_compressorLoads[i]);
+        }
+    }
+
     placeAndInitialize();
     initializeSynthesizer();
 }
@@ -301,10 +314,20 @@ void PistonEngineSimulator::simulateStep_() {
 
     const int exhaustSystemCount = m_engine->getExhaustSystemCount();
     const int intakeCount = m_engine->getIntakeCount();
+    const int compressorCount = m_engine->getCompressorCount();
     const double fluidTimestep = timestep / m_fluidSimulationSteps;
     for (int i = 0; i < m_fluidSimulationSteps; ++i) {
         for (int j = 0; j < exhaustSystemCount; ++j) {
             m_engine->getExhaustSystem(j)->process(fluidTimestep);
+        }
+
+        for (int j = 0; j < compressorCount; ++j) {
+            Compressor *compressor = m_engine->getCompressor(j);
+            const double plate = compressor->getIntake()->getThrottlePlatePosition();
+            compressor->process(
+                fluidTimestep,
+                m_engine->getOutputCrankshaft()->m_body.v_theta,
+                std::cos(plate * constants::pi / 2));
         }
 
         for (int j = 0; j < intakeCount; ++j) {
@@ -315,6 +338,12 @@ void PistonEngineSimulator::simulateStep_() {
         for (int j = 0; j < cylinderCount; ++j) {
             m_engine->getChamber(j)->flow(fluidTimestep);
         }
+    }
+
+    for (int j = 0; j < compressorCount; ++j) {
+        const double load = m_engine->getCompressor(j)->getDriveTorque();
+        m_compressorLoads[j].m_minTorque = -load;
+        m_compressorLoads[j].m_maxTorque = load;
     }
 
     im->resetIgnitionEvents();
@@ -350,6 +379,7 @@ void PistonEngineSimulator::destroy() {
     if (m_cylinderWallConstraints != nullptr) delete[] m_cylinderWallConstraints;
     if (m_linkConstraints != nullptr) delete[] m_linkConstraints;
     if (m_crankshaftFrictionConstraints != nullptr) delete[] m_crankshaftFrictionConstraints;
+    if (m_compressorLoads != nullptr) delete[] m_compressorLoads;
     if (m_exhaustFlowStagingBuffer != nullptr) delete[] m_exhaustFlowStagingBuffer;
     if (m_system != nullptr) delete m_system;
     if (m_delayFilters != nullptr) delete[] m_delayFilters;
@@ -358,6 +388,7 @@ void PistonEngineSimulator::destroy() {
     m_cylinderWallConstraints = nullptr;
     m_linkConstraints = nullptr;
     m_crankshaftFrictionConstraints = nullptr;
+    m_compressorLoads = nullptr;
     m_exhaustFlowStagingBuffer = nullptr;
     m_system = nullptr;
 
@@ -407,6 +438,18 @@ void PistonEngineSimulator::writeToSynthesizer() {
             head->getSoundAttenuation(piston->getCylinderIndex())
             * (exhaustSystem->getAudioVolume() * delayedExhaustPulse / cylinderCount)
             * (1 / (exhaustLength * exhaustLength));
+    }
+
+    const int compressorCount = m_engine->getCompressorCount();
+    for (int i = 0; i < compressorCount; ++i) {
+        Compressor *compressor = m_engine->getCompressor(i);
+        ExhaustSystem *exhaust = compressor->getExhaust();
+        const int channel = (exhaust != nullptr) ? exhaust->getIndex() : 0;
+        const double volume = (exhaust != nullptr) ? exhaust->getAudioVolume() : 1.0;
+        const double length = (exhaust != nullptr) ? std::fmax(exhaust->getLength(), 0.1) : 1.0;
+        m_exhaustFlowStagingBuffer[channel] +=
+            attenuation_3 * 1600 * units::pressure(0.02, units::atm)
+            * volume * compressor->audioSample(timestep) / (length * length);
     }
 
     synthesizer().writeInput(m_exhaustFlowStagingBuffer);

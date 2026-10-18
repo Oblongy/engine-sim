@@ -15,6 +15,8 @@ Intake::Intake() {
     m_totalFuelInjected = 0;
     m_molecularAfr = 0;
     m_runnerLength = 0;
+    m_sourcePressure = units::pressure(1.0, units::atm);
+    m_sourceTemperature = units::celcius(25.0);
 }
 
 Intake::~Intake() {
@@ -51,6 +53,8 @@ void Intake::initialize(Parameters &params) {
     m_crossSectionArea = params.CrossSectionArea;
     m_velocityDecay = params.VelocityDecay;
     m_runnerFlowRate = params.RunnerFlowRate;
+    m_sourcePressure = units::pressure(1.0, units::atm);
+    m_sourceTemperature = units::celcius(25.0);
 }
 
 void Intake::destroy() {
@@ -84,13 +88,13 @@ void Intake::process(double dt) {
     flowParams.direction_y = -1.0;
     flowParams.dt = dt;
 
-    m_atmosphere.reset(units::pressure(1.0, units::atm), units::celcius(25.0), fuelAirMix);
+    m_atmosphere.reset(m_sourcePressure, m_sourceTemperature, fuelAirMix);
     flowParams.system_0 = &m_atmosphere;
     flowParams.system_1 = &m_system;
     flowParams.k_flow = flowAttenuation * m_inputFlowK;
     m_flow = m_system.flow(flowParams);
 
-    m_atmosphere.reset(units::pressure(1.0, units::atm), units::celcius(25.0), fuelMix);
+    m_atmosphere.reset(m_sourcePressure, m_sourceTemperature, fuelMix);
     flowParams.system_0 = &m_atmosphere;
     flowParams.system_1 = &m_system;
     flowParams.k_flow = m_idleFlowK;

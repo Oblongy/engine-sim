@@ -9,6 +9,7 @@
 #include "engine_context.h"
 #include "fuel_node.h"
 #include "throttle_nodes.h"
+#include "compressor_node.h"
 
 #include "engine_sim.h"
 
@@ -47,6 +48,7 @@ namespace es_script {
             parameters.cylinderCount = cylinderCount;
             parameters.exhaustSystemCount = (int)exhaustSystems.size();
             parameters.intakeCount = (int)intakes.size();
+            parameters.compressorCount = (int)m_compressors.size();
             parameters.throttle = m_throttle->generate();
             engine->initialize(parameters);
 
@@ -105,6 +107,10 @@ namespace es_script {
                 m_cylinderBanks[i]->connectRodAssemblies(&context);
             }
 
+            for (int i = 0; i < parameters.compressorCount; ++i) {
+                m_compressors[i]->generate(engine->getCompressor(i), &context);
+            }
+
             m_ignitionModule->generate(engine, &context);
             
             Function *meanPistonSpeedToTurbulence = new Function;
@@ -137,6 +143,10 @@ namespace es_script {
 
         void addCylinderBank(CylinderBankNode *bank) {
             m_cylinderBanks.push_back(bank);
+        }
+
+        void addCompressor(CompressorNode *compressor) {
+            m_compressors.push_back(compressor);
         }
 
         int getIgnitionModuleCount() const {
@@ -182,6 +192,7 @@ namespace es_script {
         Engine::Parameters m_parameters;
         std::vector<CrankshaftNode *> m_crankshafts;
         std::vector<CylinderBankNode *> m_cylinderBanks;
+        std::vector<CompressorNode *> m_compressors;
     };
 
 } /* namespace es_script */

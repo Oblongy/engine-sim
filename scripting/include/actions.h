@@ -16,6 +16,7 @@
 #include "ignition_module_node.h"
 #include "transmission_node.h"
 #include "vehicle_node.h"
+#include "compressor_node.h"
 
 namespace es_script {
 
@@ -39,6 +40,30 @@ namespace es_script {
 
     protected:
         piranha::pNodeInput m_engineInput = nullptr;
+    };
+
+    class AddCompressorNode : public Node {
+    public:
+        AddCompressorNode() { /* void */ }
+        virtual ~AddCompressorNode() { /* void */ }
+
+    protected:
+        virtual void registerInputs() {
+            addInput("engine", &m_engine, InputTarget::Type::Object);
+            addInput("compressor", &m_compressor, InputTarget::Type::Object);
+
+            Node::registerInputs();
+        }
+
+        virtual void _evaluate() {
+            readAllInputs();
+
+            m_engine->addCompressor(m_compressor);
+        }
+
+    protected:
+        CompressorNode *m_compressor = nullptr;
+        EngineNode *m_engine = nullptr;
     };
 
     class AddRodJournalNode : public Node {

@@ -32,6 +32,7 @@ public node valvetrain_channel => __engine_sim__valvetrain_channel { /* void */ 
 public node vehicle_channel => __engine_sim__vehicle_channel { /* void */ }
 public node transmission_channel => __engine_sim__transmission_channel { /* void */ }
 public node throttle_channel => __engine_sim__throttle_channel { /* void */ }
+public node compressor_channel => __engine_sim__compressor_channel { /* void */ }
 
 private node turbulence_to_flame_speed_ratio_default {
     alias output __out:
@@ -614,4 +615,104 @@ public node vehicle => __engine_sim__vehicle {
 public node transmission => __engine_sim__transmission {
     input max_clutch_torque [float]: 1000 * units.lb_ft;
     alias output __out [transmission_channel];
+}
+
+// Forced induction
+private node _supercharger => __engine_sim__supercharger {
+    input intake [intake];
+    input max_boost [float];
+    input compressor_efficiency [float];
+    input intercooler_efficiency [float];
+    input boost_speed [float];
+    input drive_ratio [float];
+    input parasitic_torque [float];
+    input whine_volume [float];
+    input whine_order [float];
+    alias output __out [compressor_channel];
+}
+
+// Crank-driven blower feeding one intake. Boost rises with the square of crank
+// speed until boost_speed, where the bypass valve holds it at max_boost; the
+// bypass also recirculates the blower as the throttle closes.
+public node supercharger {
+    input intake;
+    input max_boost: 8.0 * units.psi;
+    input compressor_efficiency: 0.7;
+    input intercooler_efficiency: 0.0;
+    input boost_speed: 4000 * units.rpm;
+    input drive_ratio: 2.5;
+    input parasitic_torque: 2.0 * units.lb_ft;
+    input whine_volume: 0.0;
+    input whine_order: 1.0;
+    alias output __out [_supercharger]:
+        _supercharger(
+            intake: intake,
+            max_boost: max_boost,
+            compressor_efficiency: compressor_efficiency,
+            intercooler_efficiency: intercooler_efficiency,
+            boost_speed: boost_speed,
+            drive_ratio: drive_ratio,
+            parasitic_torque: parasitic_torque,
+            whine_volume: whine_volume,
+            whine_order: whine_order
+        );
+}
+
+private node _turbocharger => __engine_sim__turbocharger {
+    input intake [intake];
+    input exhaust_system [exhaust_system];
+    input max_boost [float];
+    input compressor_efficiency [float];
+    input intercooler_efficiency [float];
+    input turbine_inertia [float];
+    input max_speed [float];
+    input turbine_efficiency [float];
+    input bearing_friction [float];
+    input exhaust_restriction [float];
+    input wastegate_restriction [float];
+    input blow_off_valve [bool];
+    input blow_off_volume [float];
+    input whine_volume [float];
+    input whine_order [float];
+    alias output __out [compressor_channel];
+}
+
+// Exhaust-driven compressor: the turbine takes its work from the pressure and
+// temperature in exhaust_system's collector and feeds intake. turbine_inertia
+// sets the lag, max_speed the shaft speed that makes max_boost (the wastegate
+// opens there), exhaust_restriction the back-pressure the turbine adds.
+public node turbocharger {
+    input intake;
+    input exhaust_system;
+    input max_boost: 8.0 * units.psi;
+    input compressor_efficiency: 0.7;
+    input intercooler_efficiency: 0.0;
+    input turbine_inertia: 0.00001;
+    input max_speed: 120000 * units.rpm;
+    input turbine_efficiency: 0.6;
+    input bearing_friction: 0.0000001;
+    input exhaust_restriction: 0.6;
+    input wastegate_restriction: 1.0;
+    input blow_off_valve: true;
+    input blow_off_volume: 0.0;
+    input whine_volume: 0.0;
+    input whine_order: 1.0;
+    alias output __out [_turbocharger]:
+        _turbocharger(
+            intake: intake,
+            exhaust_system: exhaust_system,
+            max_boost: max_boost,
+            compressor_efficiency: compressor_efficiency,
+            intercooler_efficiency: intercooler_efficiency,
+            turbine_inertia: turbine_inertia,
+            max_speed: max_speed,
+            turbine_efficiency: turbine_efficiency,
+            bearing_friction: bearing_friction,
+            exhaust_restriction: exhaust_restriction,
+            wastegate_restriction: wastegate_restriction,
+            blow_off_valve: blow_off_valve,
+            blow_off_volume: blow_off_volume,
+            whine_volume: whine_volume,
+            whine_order: whine_order
+        );
 }

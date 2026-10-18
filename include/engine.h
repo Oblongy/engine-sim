@@ -11,6 +11,7 @@
 #include "exhaust_system.h"
 #include "ignition_module.h"
 #include "intake.h"
+#include "compressor.h"
 #include "combustion_chamber.h"
 #include "units.h"
 #include "throttle.h"
@@ -28,6 +29,7 @@ class Engine : public Part {
             int crankshaftCount;
             int exhaustSystemCount;
             int intakeCount;
+            int compressorCount = 0;
 
             std::string name;
 
@@ -89,6 +91,7 @@ class Engine : public Part {
         int getCrankshaftCount() const { return m_crankshaftCount; }
         int getExhaustSystemCount() const { return m_exhaustSystemCount; }
         int getIntakeCount() const { return m_intakeCount; }
+        int getCompressorCount() const { return m_compressorCount; }
         int getMaxDepth() const;
 
         Crankshaft *getCrankshaft(int i) const { return &m_crankshafts[i]; }
@@ -99,6 +102,7 @@ class Engine : public Part {
         IgnitionModule *getIgnitionModule() { return &m_ignitionModule; }
         ExhaustSystem *getExhaustSystem(int i) const { return &m_exhaustSystems[i]; }
         Intake *getIntake(int i) const { return &m_intakes[i]; }
+        Compressor *getCompressor(int i) const { return &m_compressors[i]; }
         CombustionChamber *getChamber(int i) const { return &m_combustionChambers[i]; }
         Fuel *getFuel() { return &m_fuel; }
 
@@ -141,6 +145,9 @@ class Engine : public Part {
 
         Intake *m_intakes;
         int m_intakeCount;
+
+        Compressor *m_compressors;
+        int m_compressorCount;
 
         IgnitionModule m_ignitionModule;
         Fuel m_fuel;

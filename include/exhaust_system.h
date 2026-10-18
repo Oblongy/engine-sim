@@ -42,6 +42,10 @@ class ExhaustSystem : public Part {
 
         inline GasSystem *getSystem() { return &m_system; }
 
+        // Scale on the outlet flow constant. A turbine in the tailpipe lowers it.
+        inline void setOutletFlowScale(double scale) { m_outletFlowScale = scale; }
+        inline double getOutletFlowScale() const { return m_outletFlowScale; }
+
     protected:
         GasSystem m_atmosphere;
         GasSystem m_system;
@@ -58,6 +62,7 @@ class ExhaustSystem : public Part {
         int m_index;
 
         double m_flow;
+        double m_outletFlowScale;
 };
 
 #endif /* ATG_ENGINE_SIM_EXHAUST_SYSTEM_H */

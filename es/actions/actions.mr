@@ -236,3 +236,33 @@ public node add_gear {
 public node set_transmission => __engine_sim__set_transmission {
     input transmission [transmission];
 }
+
+// Forced induction
+private node _add_compressor => __engine_sim__add_compressor {
+    input engine [engine];
+    input compressor [compressor_channel];
+}
+
+public node add_compressor {
+    input compressor;
+    input this;
+    alias output __out: this;
+
+    _add_compressor(engine: this, compressor: compressor)
+}
+
+public node add_supercharger {
+    input supercharger;
+    input this;
+    alias output __out: this;
+
+    _add_compressor(engine: this, compressor: supercharger)
+}
+
+public node add_turbocharger {
+    input turbocharger;
+    input this;
+    alias output __out: this;
+
+    _add_compressor(engine: this, compressor: turbocharger)
+}

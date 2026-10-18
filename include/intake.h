@@ -58,6 +58,15 @@ class Intake : public Part {
         double m_flowRate;
         double m_totalFuelInjected;
 
+        // Pressure and temperature of the air the intake draws from: ambient
+        // unless a compressor feeds this intake.
+        inline void setSource(double pressure, double temperature) {
+            m_sourcePressure = pressure;
+            m_sourceTemperature = temperature;
+        }
+        inline double getSourcePressure() const { return m_sourcePressure; }
+        inline double getSourceTemperature() const { return m_sourceTemperature; }
+
     protected:
         double m_crossSectionArea;
         double m_inputFlowK;
@@ -69,6 +78,8 @@ class Intake : public Part {
         double m_velocityDecay;
 
         GasSystem m_atmosphere;
+        double m_sourcePressure;
+        double m_sourceTemperature;
 };
 
 #endif /* ATG_ENGINE_SIM_INTAKE_H */

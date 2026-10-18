@@ -70,6 +70,7 @@ add_library(engine-sim STATIC
     src/ignition_module.cpp
     src/impulse_response.cpp
     src/intake.cpp
+    src/compressor.cpp
     src/jitter_filter.cpp
     src/leveling_filter.cpp
     src/low_pass_filter.cpp
@@ -114,6 +115,7 @@ add_library(engine-sim STATIC
     include/ignition_module.h
     include/impulse_response.h
     include/intake.h
+    include/compressor.h
     include/jitter_filter.h
     include/leveling_filter.h
     include/low_pass_filter.h
@@ -153,6 +155,7 @@ if (PIRANHA_ENABLED)
         # Include files
         scripting/include/actions.h
         scripting/include/camshaft_node.h
+        scripting/include/compressor_node.h
         scripting/include/channel_types.h
         scripting/include/compiler.h
         scripting/include/connecting_rod_node.h
@@ -319,3 +322,10 @@ target_link_libraries(engine-sim-test
 
 include(GoogleTest)
 gtest_discover_tests(engine-sim-test)
+
+# Headless forced-induction probe (no window, no audio device)
+if (PIRANHA_ENABLED)
+    add_executable(boost-probe tools/boost_probe.cpp)
+    target_link_libraries(boost-probe engine-sim engine-sim-script-interpreter)
+    target_include_directories(boost-probe PUBLIC dependencies/submodules)
+endif (PIRANHA_ENABLED)

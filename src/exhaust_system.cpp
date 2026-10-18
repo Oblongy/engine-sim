@@ -13,6 +13,7 @@ ExhaustSystem::ExhaustSystem() {
     m_flow = 0;
     m_index = -1;
     m_impulseResponse = nullptr;
+    m_outletFlowScale = 1.0;
 }
 
 ExhaustSystem::~ExhaustSystem() {
@@ -51,6 +52,7 @@ void ExhaustSystem::initialize(const Parameters &params) {
     m_impulseResponse = params.impulseResponse;
     m_length = params.length;
     m_primaryTubeLength = params.primaryTubeLength;
+    m_outletFlowScale = 1.0;
 }
 
 void ExhaustSystem::destroy() {
@@ -72,7 +74,7 @@ void ExhaustSystem::process(double dt) {
     flowParams.dt = dt;
     flowParams.system_0 = &m_atmosphere;
     flowParams.system_1 = &m_system;
-    flowParams.k_flow = m_outletFlowRate;
+    flowParams.k_flow = m_outletFlowRate * m_outletFlowScale;
 
     m_flow = m_system.flow(flowParams);
 
